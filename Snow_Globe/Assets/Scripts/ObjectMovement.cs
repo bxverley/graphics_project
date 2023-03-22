@@ -1,49 +1,36 @@
 using UnityEngine;
 using System.Collections;
 
-public class ObjectRotate : MonoBehaviour
+public class ObjectMovement : MonoBehaviour
 {
 
-    private float sensitivity;
-    private Vector3 mouseRef;
-    private Vector3 mouseOffset;
-    private Vector3 rotation;
-    private bool isRotating;
+    private Vector3 _PrevPos;
+    private Vector3 _PosDelta;
 
     void Start ()
     {
-        sensitivity = .5f;
-        rotation = Vector3.zero;
+
+        Vector3 _PrevPos = Vector3.zero;
+        Vector3 _PosDelta = Vector3.zero;
 
     }
 
     void Update()
     {
-        if(isRotating)
+        if(Input.GetMouseButton(0))
         {
-            mouseOffset = (Input.mousePosition - mouseRef);
-
-            rotation.y = -(mouseOffset.x) * sensitivity;
-
-            rotation.x = -(mouseOffset.y) * sensitivity;
-
-            transform.eulerAngles += rotation;
-
-            mouseRef = Input.mousePosition;
+            _PosDelta = Input.mousePosition - _PrevPos;
+            if(Vector3.Dot(transform.up, Vector3.up) >= 0)
+            {
+                transform.Rotate(transform.up, Vector3.Dot(_PosDelta, Camera.main.transform.right), Space.World);
+            }
+            else
+            {
+                transform.Rotate(transform.up, Vector3.Dot(_PosDelta,Camera.main.transform.right), Space.World);
+            }
+            transform.Rotate(Camera.main.transform.right, Vector3.Dot(_PosDelta, Camera.main.transform.up), Space.World);
         }
-    }
-
-    void onMouseDown()
-    {
-        // set flag to true 
-        isRotating = true;
-
-        mouseRef - Input.mousePosition;
-    }
-
-    void onMouseUp()
-    {
-        isRotating = false;
+        _PrevPos = Input.mousePosition;
     }
 
 }
