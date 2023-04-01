@@ -29,7 +29,7 @@ public class KMeansFunctions : MonoBehaviour
     private int counter = 0;
 
     private const int spreadIterationCount = 3;
-    private const int kMeansCalcIterationCount = 30;
+    private const int kMeansCalcIterationCount = 32;
 
     private List<GameObject> allSpheres = new List<GameObject>();
 
