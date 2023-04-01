@@ -1,20 +1,37 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
 
-    int speed, rotationSpeed;
+    float speed, rotationSpeed;
     bool toRotate, toFly;
+
+
+    ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
+    SnowGlobe snowGlobe;
+    
+    CollisionChecker collisionChecker = new();
+    KDTree meshCollisionKDTree;
+    ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
+
+
+
+
 
     // Start is called before the first frame update
     void Start()
     {
-        speed = 10;
+        speed = 0.1f;
         rotationSpeed = 50;
         toRotate = false;
         toFly = false;
+
+
+        ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
+        snowGlobe = GameObject.Find("SnowGlobe").GetComponent<SnowGlobe>();
+        ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
+
+
     }
 
     // Update is called once per frame
@@ -76,9 +93,26 @@ public class CameraMovement : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F))
         {
-            toFly = !toFly;                                                           // Set the opposite bool of the current bool value.
+            toFly = !toFly;                                                                 // Set the opposite bool of the current bool value.
         }
 
 
+
+
+
+        ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
+        if (snowGlobe.meshCollisionKDTree != null)
+        {
+            meshCollisionKDTree = snowGlobe.meshCollisionKDTree;
+        }
+
+        if (collisionChecker.CheckWallCollision(transform.position, meshCollisionKDTree)){
+            Debug.Log("COLLIDED!");
+        }
+        else
+        {
+            Debug.Log("No collision");
+        }
+        ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
     }
 }

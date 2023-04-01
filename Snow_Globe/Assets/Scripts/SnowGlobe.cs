@@ -1,11 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class SnowGlobe : MonoBehaviour
 {
@@ -14,9 +10,13 @@ public class SnowGlobe : MonoBehaviour
 
     // Reference for Mesh Generation: https://www.youtube.com/watch?v=eJEpeUH1EMg
     private Mesh snowGlobe;
-    private List<Vector3> vertices;
-    private List<Vector3> vertexNormals;
-    private List<int> triangles;
+    public List<Vector3> vertices;
+    public List<Vector3> vertexNormals;
+    public List<int> triangles;
+
+    public float[] min_xyz = new float[] { 10000000, 10000000, 10000000 };
+    public float[] max_xyz = new float[] { 0, 0, 0 };
+
 
     // For metallic and glossy texture
     private float materialMetallicVal = 0.7f; 
@@ -29,14 +29,18 @@ public class SnowGlobe : MonoBehaviour
     MeshRenderer gameObjectMeshRenderer;
     MeshFilter gameObjectMeshFilter;
 
-    ParticleSystem snowParticleSystem;
+    KMeansFunctions kMeansFunctions;
+    public KDTree meshCollisionKDTree;
 
     // Start is called before the first frame update
     void Start()
     {
-        objectsNames = new string[] { "garg", "mickey", "sphere" };
+        objectsNames = new string[] { "garg", "sphere",  "mickey"  };
         objectNameIndex = 0;
-        
+
+        min_xyz = new float[] { 10000000, 10000000, 10000000 };
+        max_xyz = new float[] { 0, 0, 0 };
+
 
         // These 2 MUST HAVE, else Unity does not draw mesh in render.
         // Reference:
@@ -54,38 +58,24 @@ public class SnowGlobe : MonoBehaviour
 
         SetMeshRendererProperties();
 
+        kMeansFunctions = gameObject.AddComponent<KMeansFunctions>();
 
+        kMeansFunctions.Start();
+        kMeansFunctions.BeginKMeansOperations(3);
 
+        ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
+        kMeansFunctions.ShowSpheres();
+        ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
 
-        // NOT WORKING YET //
-
-        // ------ Snow Particle System ------ //
-        snowParticleSystem = gameObject.AddComponent<ParticleSystem>();
-
-        int particleCount = 10;
-
-        ParticleSystem.Particle[] particleList = new ParticleSystem.Particle[particleCount];
-
-        for(int i = 0; i < particleCount; i++)
-        {
-            particleList[i] = new ParticleSystem.Particle();
-            particleList[i].startColor = Color.white;
-            particleList[i].position = Vector3.zero;
-            particleList[i].remainingLifetime = float.PositiveInfinity;
-        }
-
-        snowParticleSystem.SetParticles(particleList);
+        // Reference to destroy component from object:https://answers.unity.com/questions/378930/how-delete-or-remove-a-component-of-an-gameobject.html
+        Destroy(kMeansFunctions);
+        System.GC.Collect();
         
-        snowParticleSystem.Stop();
 
-        // snowParticleSystem.Emit(5);
+        meshCollisionKDTree = kMeansFunctions.ConvertToLowMemoryKDTree();
 
-        // Reference on setting particle colors: https://answers.unity.com/questions/1363190/how-do-i-change-particle-system-color-via-script-i.html
-        // Reference on having to have a ParticleSystem.MainModule class variable and not directly using snowParticleSystem.main.startColor (which gives error) : https://forum.unity.com/threads/error-cs1612-cannot-modify-a-value-type-return-value-of-unityengine-particlesystem-main.793899/
-        // ParticleSystem.MainModule mainProperties = snowParticleSystem.main;
-        // mainProperties.startColor = Color.white; 
 
-        // ------ Snow Particle System ------ //
+
 
     }
 
@@ -106,7 +96,25 @@ public class SnowGlobe : MonoBehaviour
                 objectNameIndex = 0;
             }
 
+            ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
+            kMeansFunctions.DestroySpheres();
+            ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
+
+            // Reference to destroy component from object:https://answers.unity.com/questions/378930/how-delete-or-remove-a-component-of-an-gameobject.html
+            Destroy(kMeansFunctions);
+
             GenerateGlobeProperties();
+
+            kMeansFunctions = gameObject.AddComponent<KMeansFunctions>();
+            kMeansFunctions.Start();
+            kMeansFunctions.BeginKMeansOperations(3);
+
+            ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
+            kMeansFunctions.ShowSpheres();
+            ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
+
+            meshCollisionKDTree = kMeansFunctions.ConvertToLowMemoryKDTree();
+
             UpdateGlobeProperties();
         }
     }
@@ -118,9 +126,11 @@ public class SnowGlobe : MonoBehaviour
         vertices = new List<Vector3>();
         vertexNormals = new List<Vector3>();
         triangles = new List<int>();
-
-        List<(int vertexIndex, int vertexNormIndex)> listOfTuples = new List<(int vertexIndex, int vertexNormIndex)>();    // To arrange vertexNormal list later on.
+        
+        
         // Tuple Reference: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-tuples
+        List<(int vertexIndex, int vertexNormIndex)> listOfTuples = new List<(int vertexIndex, int vertexNormIndex)>();    // To arrange vertexNormal list later on.
+        
 
 
         // Reference for reading file: https://stackoverflow.com/questions/31586186/loading-a-obj-into-unity-at-runtime
@@ -147,7 +157,22 @@ public class SnowGlobe : MonoBehaviour
 
                 else if (typeOfData == "v")
                 {
-                    vertices.Add(new Vector3(float.Parse(splitValues[1]), float.Parse(splitValues[2]), float.Parse(splitValues[3])));
+                    float[] xyz = new float[] { float.Parse(splitValues[1]), float.Parse(splitValues[2]), float.Parse(splitValues[3]) };
+
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (xyz[i] < min_xyz[i])
+                        {
+                            min_xyz[i] = xyz[i];
+                        }
+
+                        if (xyz[i] > max_xyz[i])
+                        {
+                            max_xyz[i] = xyz[i];
+                        }
+                    }
+
+                    vertices.Add(new Vector3(xyz[0], xyz[1], xyz[2]));
                 }
 
                 else if (typeOfData == "f")
@@ -172,6 +197,7 @@ public class SnowGlobe : MonoBehaviour
                     triangles.Add(faceVtxIndex3);
 
                     // Adding tuples of vertex index and corresponding vertex normal index
+                    // This would be sorted based on indices. Since there would be duplicates for different triangle faces, this would help to prevent duplicates in the vertices array and vertexNormal array.
                     listOfTuples.Add( (faceVtxIndex1, faceVtxNormIndex1) );
                     listOfTuples.Add( (faceVtxIndex2, faceVtxNormIndex2) );
                     listOfTuples.Add( (faceVtxIndex3, faceVtxNormIndex3) );
@@ -260,3 +286,4 @@ public class SnowGlobe : MonoBehaviour
         gameObjectMeshRenderer.material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
     }
 }
+
