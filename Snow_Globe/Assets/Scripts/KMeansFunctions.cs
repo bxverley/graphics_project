@@ -40,7 +40,6 @@ public class KMeansFunctions : MonoBehaviour
     private CentroidNodeForCalc currentCentroidNodeForCalc;
     private TriangleNode currentTriangleNode;
     private CentroidNode nearestNode;
-    private CentroidNode nearestNodeInTempTree;
     private List<CentroidNodeForCalc> tempCentroidNodeForCalcList;
     private KDTree tempKDTree;
     private List<TriangleNode> tempListOfTriNodesTooFar;
@@ -629,8 +628,6 @@ public class KMeansFunctions : MonoBehaviour
         currentCentroidNodeForCalc = null;
         currentTriangleNode = null;
         nearestNode = null;
-        nearestNodeInTempTree = null;
-
 
         tempKDTree.SetRootNode(null);
         tempCentroidNodeForCalcList.Clear();

@@ -32,6 +32,11 @@ public class SnowGlobe : MonoBehaviour
     KMeansFunctions kMeansFunctions;
     public KDTree meshCollisionKDTree;
 
+    public ObjectMovement objectMovementScript;
+
+
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -76,6 +81,9 @@ public class SnowGlobe : MonoBehaviour
 
 
 
+        // Adding ObjectMovement.cs script to the game object.
+        objectMovementScript = gameObject.AddComponent<ObjectMovement>();
+        objectMovementScript.Start();
 
     }
 
@@ -259,6 +267,12 @@ public class SnowGlobe : MonoBehaviour
         snowGlobe.triangles = convertedTrianglesArray;
         snowGlobe.colors32 = globeTransparencyColors;
         // snowGlobe.normals = convertedVertexNormalArray;
+        snowGlobe.RecalculateNormals();
+    }
+
+    public void UpdateGlobeVertices(Vector3[] transformedVertices)
+    {
+        snowGlobe.vertices = transformedVertices;
         snowGlobe.RecalculateNormals();
     }
 

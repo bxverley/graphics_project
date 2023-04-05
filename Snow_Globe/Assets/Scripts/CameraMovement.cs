@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
@@ -9,7 +10,10 @@ public class CameraMovement : MonoBehaviour
 
     ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
     SnowGlobe snowGlobe;
-    
+    ObjectMovement objectMovementScript;
+    Matrix4x4 combinedInverseMatrix;
+
+
     CollisionChecker collisionChecker = new();
     KDTree meshCollisionKDTree;
     ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
@@ -21,7 +25,7 @@ public class CameraMovement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        speed = 0.1f;
+        speed = 10f;
         rotationSpeed = 50;
         toRotate = false;
         toFly = false;
@@ -101,18 +105,27 @@ public class CameraMovement : MonoBehaviour
 
 
         ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
+        
         if (snowGlobe.meshCollisionKDTree != null)
         {
             meshCollisionKDTree = snowGlobe.meshCollisionKDTree;
         }
 
-        if (collisionChecker.CheckWallCollision(transform.position, meshCollisionKDTree)){
+        if (snowGlobe.objectMovementScript.combinedInverseTransformMatrix != null)
+        {
+            combinedInverseMatrix = snowGlobe.objectMovementScript.combinedInverseTransformMatrix;
+        }
+
+        if (collisionChecker.CheckWallCollision(combinedInverseMatrix * new Vector4(transform.position.x, transform.position.y, transform.position.z, 1), meshCollisionKDTree))
+        {
             Debug.Log("COLLIDED!");
         }
         else
         {
             Debug.Log("No collision");
         }
+
+        
         ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
     }
 }
