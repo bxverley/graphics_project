@@ -1,6 +1,7 @@
 # Graphics and Visualisation Project 
 ### Snow Globe Simulation on Unity 
 
+![](https://github.com/bxverley/graphics_project/blob/main/snowglobe%20shake.gif)
 
 How to run:
 
