@@ -125,7 +125,7 @@ public class SnowGlobe : MonoBehaviour
         triangleCenterVerticesTree = kMeansFunctions.ReturnTriangleCenterVerticesTree();
 
         ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
-        kMeansFunctions.ShowSpheres();
+        //kMeansFunctions.ShowSpheres(); //bounding volume
         ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
 
         meshCollisionKDTree = kMeansFunctions.ConvertToLowMemoryKDTree();
