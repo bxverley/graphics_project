@@ -8,12 +8,9 @@ public class KMeansFunctions : MonoBehaviour
     private List<CentroidNodeForCalc> allCentroidNodeForCalc = new List<CentroidNodeForCalc>();
     private List<bool> centroidChanged = new();
 
-    private float maximumAcceptableDist = 0.001f;
-    private float maximumAcceptableCosAngle = -0.01f;                                                           // Allowed angle to be more than 90 degrees. So vectors compared are more likely to be pointing in the oppsite direction.
-
     private List<Vector3> verticesOfTriangles;
     private List<TriangleNode> vertices;
-    public KDTree triangleCenterVerticesTree;
+    private KDTree triangleCenterVerticesTree;
     private List<int> triangles;
 
     private CentroidNodeForCalc[,] arrayToDistributeEqually;                                                    // For storing centroids at intervals. To check distribution of centroid locations.
@@ -30,6 +27,12 @@ public class KMeansFunctions : MonoBehaviour
 
     private const int spreadIterationCount = 3;
     private const int kMeansCalcIterationCount = 32;
+    public static float boundingRadiusScaleFactor = 0.8f;
+    private float maximumAcceptableDist = 0.001f;
+    private float maximumAcceptableCosAngle = -0.01f;                                                           // Allowed maximum angle to only be more than 90 degrees. cos(angle > 90) < cos(90) = 0. So vectors compared are more likely to be pointing in the oppsite direction.
+    private const int ensureBoundsInMeshIterLimit = 15;
+    private const float scaleDownTotalVolFactor = 0.97f;
+    private Matrix4x4 scaleDownTotalBoundVolMatrix = Matrix4x4.Scale(new Vector3(scaleDownTotalVolFactor - 0.1f, scaleDownTotalVolFactor, scaleDownTotalVolFactor - 0.1f));
 
     private List<GameObject> allSpheres = new List<GameObject>();
 
@@ -89,6 +92,16 @@ public class KMeansFunctions : MonoBehaviour
             triangleCenterVerticesTree.Insert(currentTriangleNode);
         }
     }
+
+
+    public KDTree ReturnTriangleCenterVerticesTree()
+    {
+        return triangleCenterVerticesTree;
+    }
+
+
+
+
 
     public void BeginKMeansOperations(int numberOfCentroids)
     {
@@ -249,12 +262,6 @@ public class KMeansFunctions : MonoBehaviour
         }
         
     }
-
-
-   
-
-
-
 
 
 
@@ -538,15 +545,16 @@ public class KMeansFunctions : MonoBehaviour
 
     public void EnsureAllBoundsInsideMesh()
     {
-        int counterLimit;
+        int counter;
+        Vector3 triangleNormalOneAxis;
         for(int i = 0; i < allCentroidNodeForCalc.Count; i++)
         {
-            counterLimit = 0; 
+            counter = 0; 
 
             currentTriangleNode = (TriangleNode) triangleCenterVerticesTree.StartSearch(allCentroidNodeForCalc[i].position);
             currentVector3 = allCentroidNodeForCalc[i].position - currentTriangleNode.position;                                     // TAKE NOTE OF THE ORDER OF SUBTRACTION!!!
 
-            while (Vector3.Dot(currentVector3, currentTriangleNode.triangleNormal) > maximumAcceptableCosAngle && counterLimit < 15)
+            while (Vector3.Dot(currentVector3, currentTriangleNode.triangleNormal) > maximumAcceptableCosAngle && counter < ensureBoundsInMeshIterLimit)
             {
                 // If vector from triangle midpoint to centroid is almost parallel to the triangle normal, shift whole bounding sphere of that centroid in the direction opposite of the triangle normal,
                 //  with the magnitude of distance shifted being 1.5 the radius of the bounding sphere of this centroid.
@@ -560,12 +568,14 @@ public class KMeansFunctions : MonoBehaviour
                 //  cause too much (if sphere is at a narrow area of the mesh) or too little shifting (if sphere accidentally shifted too far due to the shift of 2x its old radius). 
                 allCentroidNodeForCalc[i].radius = Vector3.Magnitude(currentVector3);
 
-                counterLimit++;
+                counter++;
             }
 
 
 
-            if(Vector3.Magnitude(currentVector3) < allCentroidNodeForCalc[i].radius)
+
+            // currentVector3 is: allCentroidNodeForCalc[i].position - currentTriangleNode.position
+            if (Vector3.Magnitude(currentVector3) < allCentroidNodeForCalc[i].radius)
             {
                 // In case the while loop isn't accessed, but the triangle midpoint is within the bounding sphere.
                 // It should not be within the bounding sphere of the centroid as the bounding sphere is meant to determine all the areas the particles can move in.
@@ -573,7 +583,7 @@ public class KMeansFunctions : MonoBehaviour
                 // So just check and set in case.
 
                 // Shift centroid such that the bounding sphere is not overshooting mesh walls.
-                allCentroidNodeForCalc[i].position -= currentTriangleNode.triangleNormal * -1 * (allCentroidNodeForCalc[i].radius - Vector3.Magnitude(currentVector3));
+                allCentroidNodeForCalc[i].position += currentTriangleNode.triangleNormal * -1 * (allCentroidNodeForCalc[i].radius - Vector3.Magnitude(currentVector3));
 
 
                 // Search latest nearest triangle midpoint.
@@ -583,11 +593,44 @@ public class KMeansFunctions : MonoBehaviour
                 currentVector3 = allCentroidNodeForCalc[i].position - currentTriangleNode.position;
                 
                 allCentroidNodeForCalc[i].radius = Vector3.Magnitude(currentVector3);
+
+                /*
+                for (int j = 0; j < 3; j++)
+                {
+                    /*
+                    centroidToPointDist_1D = Math.Abs(allCentroidNodeForCalc[i].position[j] - currentTriangleNode.position[j]);
+                    currentVector3 = (allCentroidNodeForCalc[i].position + currentTriangleNode.triangleNormal * allCentroidNodeForCalc[i].radius) - currentTriangleNode.position;
+                    if (allCentroidNodeForCalc[i].radius > centroidToPointDist_1D && Vector3.Dot(Vector3.Normalize(currentVector3), Vector3.Normalize(currentTriangleNode.triangleNormal)) < 0 )
+                    {
+                        allCentroidNodeForCalc[i].position[j] += currentVector3[j] * (allCentroidNodeForCalc[i].radius - centroidToPointDist_1D);
+                    }
+                    
+
+                    triangleNormalOneAxis = Vector3.zero;
+                    triangleNormalOneAxis[j] = currentTriangleNode.triangleNormal[j];
+
+                    currentVector3 = (allCentroidNodeForCalc[i].position + triangleNormalOneAxis * allCentroidNodeForCalc[i].radius) - currentTriangleNode.position;
+                    if (Vector3.Dot(Vector3.Normalize(currentVector3), Vector3.Normalize(currentTriangleNode.triangleNormal)) < 0)
+                    {
+                        allCentroidNodeForCalc[i].radius *= 0.8f;
+                    }
+                }
+                */
             }
 
+
+
+
+            // Further shift centroid such that the bounding sphere is not overshooting mesh walls regardless of whether it is out or already within.
+            allCentroidNodeForCalc[i].position = scaleDownTotalBoundVolMatrix.MultiplyPoint3x4(allCentroidNodeForCalc[i].position);
+
             // Reduce chances of going out of mesh.
-            allCentroidNodeForCalc[i].radius *= 0.8f;
+            allCentroidNodeForCalc[i].radius *= boundingRadiusScaleFactor;
+
+            
         }
+
+
     }
 
 
@@ -705,7 +748,7 @@ public class KMeansFunctions : MonoBehaviour
     {
         GameObject sphere;
 
-        Debug.Log($"allCentroidNodeForCalc.Count is {allCentroidNodeForCalc.Count}");
+        // Debug.Log($"allCentroidNodeForCalc.Count is {allCentroidNodeForCalc.Count}");
 
         for (int i = 0; i < allCentroidNodeForCalc.Count; i++)
         {

@@ -17,6 +17,7 @@ public class ObjectMovement : MonoBehaviour
     private bool leftMouseClickStarted = false;
     private bool rightMouseClickStarted = false;
 
+
     private Matrix4x4 translationMatrix;
 
     private float rotationScaleFactor = 30;
@@ -24,8 +25,12 @@ public class ObjectMovement : MonoBehaviour
     
     public Matrix4x4 combinedTransformMatrix;
     public Matrix4x4 combinedInverseTransformMatrix;
+    public Matrix4x4 combinedTransformMatrix_NoTranslation;
+    public Matrix4x4 combinedInverseTransformMatrix_NoTranslation;
 
     private SnowGlobe snowGlobe;
+    public GlobeParticleSystem globeParticleSystem;
+    private Vector3[] platformTransformedVertices, platformOriginalTransformedVertices;
 
     private List<Vector3> snowGlobeVertices;
     private Vector3[] snowGlobeTransformedVertices, snowGlobePrevTransformedVertices;
@@ -34,7 +39,7 @@ public class ObjectMovement : MonoBehaviour
     private float cameraZDistFromGlobe;
 
 
-    public void Start ()
+    void Start ()
     {
         /*
         Vector3 _PrevPos = Vector3.zero;
@@ -64,10 +69,20 @@ public class ObjectMovement : MonoBehaviour
             snowGlobePrevTransformedVertices[i] = snowGlobeVertices[i];
         }
 
+        platformOriginalTransformedVertices = snowGlobe.platformMesh.vertices;
+        platformTransformedVertices = new Vector3[platformOriginalTransformedVertices.Length];
+
+
+
         // Reference to get Matrix4x4 identity matrix: https://docs.unity3d.com/ScriptReference/Matrix4x4-identity.html
         combinedTransformMatrix = Matrix4x4.identity;
         combinedInverseTransformMatrix = Matrix4x4.identity;
 
+    }
+
+    public void RetrieveGlobeParticleSystem()
+    {
+        globeParticleSystem = snowGlobe.globeParticleSystem;
     }
 
     void Update()
@@ -106,6 +121,20 @@ public class ObjectMovement : MonoBehaviour
                 // Reference to create Matrix4x4 object for translation matrix: https://docs.unity3d.com/ScriptReference/Matrix4x4.Translate.html
                 translationMatrix = Matrix4x4.Translate(translationMousePosChangeVector);
 
+                DotProdToCombinedTransformMatrix(translationMatrix);
+                DotProdToInverseCombinedMatrix(Matrix4x4.Inverse(translationMatrix));
+
+                SetMatricesWithoutTranslation();
+
+
+
+                if (globeParticleSystem == null)
+                {
+                    RetrieveGlobeParticleSystem();
+                }
+                globeParticleSystem.CheckAllParticlesWhenMovement();
+
+
 
                 // Performing transformation on previous transformed vertices, NOT THE ORIGINAL VERTICES WHEN THE MESH IS LOADED.
                 for (int i = 0; i < snowGlobeVertices.Count; i++)
@@ -119,8 +148,6 @@ public class ObjectMovement : MonoBehaviour
  
                 snowGlobe.UpdateGlobeVertices(snowGlobeTransformedVertices);
 
-                DotProdToCombinedTransformMatrix(translationMatrix);
-                DotProdToInverseCombinedMatrix(Matrix4x4.Inverse(translationMatrix));
             }
                 
 
@@ -161,10 +188,31 @@ public class ObjectMovement : MonoBehaviour
                 //   and a value of rotationMousePosChangeVector.z around the world z-axis.
                 // Used y value for rotation around x-axis as shifting mouse up and down is meant to rotate the object up and down. So rotate around x-axis.
                 // Same concept for using x value for rotation around y-axis. Multiplied by -1 as without that, object rotates in opposite direction as mouse movement.
-                rotationAnglesCombined = Quaternion.Euler(rotationMousePosChangeVector.y, -1 * rotationMousePosChangeVector.x, rotationMousePosChangeVector.z);
+                rotationAnglesCombined = Quaternion.Euler(rotationMousePosChangeVector.y, -1.0f * rotationMousePosChangeVector.x, rotationMousePosChangeVector.z);
                 rotationMatrix_AroundOrigin = Matrix4x4.Rotate(rotationAnglesCombined);
-
                 SetRotationMatrix_MeshLocalSpace(ref rotationMatrix_MeshLocalSpace, rotationMatrix_AroundOrigin, translateToOriginMatrix, translateToPositionMatrix);
+                DotProdToCombinedTransformMatrix(rotationMatrix_MeshLocalSpace);
+                DotProdToInverseCombinedMatrix(Matrix4x4.Inverse(rotationMatrix_MeshLocalSpace));
+
+                SetMatricesWithoutTranslation();
+
+
+                /*
+                // Get the inverse for the rotation matrix of Euler Angles.
+                rotationAnglesCombined = Quaternion.Euler(- rotationMousePosChangeVector.y, rotationMousePosChangeVector.x, - rotationMousePosChangeVector.z);
+                rotationMatrix_AroundOrigin = Matrix4x4.Rotate(rotationAnglesCombined);
+                SetRotationMatrix_MeshLocalSpace(ref rotationMatrix_MeshLocalSpace, rotationMatrix_AroundOrigin, translateToOriginMatrix, translateToPositionMatrix);
+                DotProdToInverseCombinedMatrix(rotationMatrix_MeshLocalSpace);
+                */
+
+
+                if (globeParticleSystem == null)
+                {
+                    RetrieveGlobeParticleSystem();
+                }
+
+                globeParticleSystem.CheckAllParticlesWhenMovement();
+
 
 
                 // Performing transformation on previous transformed vertices, NOT THE ORIGINAL VERTICES WHEN THE MESH IS LOADED.
@@ -179,10 +227,7 @@ public class ObjectMovement : MonoBehaviour
 
                 snowGlobe.UpdateGlobeVertices(snowGlobeTransformedVertices);
 
-                DotProdToCombinedTransformMatrix(rotationMatrix_MeshLocalSpace);
-                DotProdToInverseCombinedMatrix(Matrix4x4.Inverse(rotationMatrix_MeshLocalSpace));
 
-               
             }
 
 
@@ -204,7 +249,31 @@ public class ObjectMovement : MonoBehaviour
         }
 
 
+        if(rightMouseClickStarted || leftMouseClickStarted)
+        {
+            for (int i = 0; i < platformOriginalTransformedVertices.Length; i++)
+            {
+                // Transform platform in snow globe local space to snow globe world space.
+                platformTransformedVertices[i] = combinedTransformMatrix.MultiplyPoint3x4(platformOriginalTransformedVertices[i]);
+            }
+            snowGlobe.UpdatePlatformVertices(platformTransformedVertices);
+        }
+
     }
+
+    void SetMatricesWithoutTranslation()
+    {
+        combinedTransformMatrix_NoTranslation = Matrix4x4.identity;
+        combinedTransformMatrix_NoTranslation.SetColumn(0, combinedTransformMatrix.GetColumn(0));
+        combinedTransformMatrix_NoTranslation.SetColumn(1, combinedTransformMatrix.GetColumn(1));
+        combinedTransformMatrix_NoTranslation.SetColumn(2, combinedTransformMatrix.GetColumn(2));
+
+        combinedInverseTransformMatrix_NoTranslation = Matrix4x4.identity;
+        combinedInverseTransformMatrix_NoTranslation.SetColumn(0, combinedInverseTransformMatrix.GetColumn(0));
+        combinedInverseTransformMatrix_NoTranslation.SetColumn(1, combinedInverseTransformMatrix.GetColumn(1));
+        combinedInverseTransformMatrix_NoTranslation.SetColumn(2, combinedInverseTransformMatrix.GetColumn(2));
+    }
+
 
     void DotProdToCombinedTransformMatrix(Matrix4x4 transformMatrix)
     {
@@ -213,7 +282,7 @@ public class ObjectMovement : MonoBehaviour
 
     void DotProdToInverseCombinedMatrix(Matrix4x4 inversedTransformMatrix)
     {
-        combinedInverseTransformMatrix = inversedTransformMatrix * combinedInverseTransformMatrix;
+        combinedInverseTransformMatrix = combinedInverseTransformMatrix * inversedTransformMatrix;
     }
 
     void SetRotationMatrix_MeshLocalSpace(ref Matrix4x4 rotationMatrix_MeshLocalSpace, Matrix4x4 rotationMatrix_AroundOrigin, Matrix4x4 translateToOriginMatrix, Matrix4x4 translateToPositionMatrix)
@@ -226,7 +295,10 @@ public class ObjectMovement : MonoBehaviour
         translateToOriginMatrix[2, 3] = -1 * combinedTransformMatrix[2, 3];
 
         translateToPositionMatrix = Matrix4x4.identity;
-        translateToPositionMatrix.SetColumn(3, combinedTransformMatrix.GetColumn(3));
+        translateToPositionMatrix[0, 3] = combinedTransformMatrix[0, 3];
+        translateToPositionMatrix[1, 3] = combinedTransformMatrix[1, 3];
+        translateToPositionMatrix[2, 3] = combinedTransformMatrix[2, 3];
+        // translateToPositionMatrix.SetColumn(3, combinedTransformMatrix.GetColumn(3));
 
         rotationMatrix_MeshLocalSpace = translateToPositionMatrix * rotationMatrix_AroundOrigin * translateToOriginMatrix;
     }

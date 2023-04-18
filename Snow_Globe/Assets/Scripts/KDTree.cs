@@ -10,6 +10,17 @@ public class KDTree
 
     private bool mustNotEqual = true;
 
+    private const float realTimeAdding_RadiusMinLimit = 0.3f;
+    private List<Vector3> verticesOfTriangles;
+    private List<int> triangles;
+
+    // Reuse Variables
+    private TriangleNode nearestTriangle;
+    private float minRadius;
+    private float currentSize;
+
+
+
    
     public CentroidNode GetRootNode()
     {
@@ -139,6 +150,61 @@ public class KDTree
 
             return;
         }
+    }
+
+    public void SetVerticesOfTrianglesAndTriangles(List<Vector3> snowGlobeVerticesOfTriangles, List<int> snowGlobeTriangles)
+    {
+        verticesOfTriangles = snowGlobeVerticesOfTriangles;
+        triangles = snowGlobeTriangles;
+    }
+
+    public void RealTimeAddBoundingSpheres(KDTree triangleCenterVerticesTree, Vector3 point, Matrix4x4 combinedInverseTransformMatrix)
+    {
+        point = combinedInverseTransformMatrix.MultiplyPoint3x4(point);
+        nearestTriangle = (TriangleNode)triangleCenterVerticesTree.StartSearch(point);
+        currentNearest = StartSearch(point);
+
+        // Debug.Log($"Vector3.Magnitude(point - nearestTriangle.position) * KMeansFunctions.boundingRadiusScaleFactor: {Vector3.Magnitude(point - nearestTriangle.position) * KMeansFunctions.boundingRadiusScaleFactor}, and realTimeAdding_RadiusMinLimit: {realTimeAdding_RadiusMinLimit}");
+        
+        if( /*Vector3.Magnitude(point - currentNearest.position) < realTimeAdding_RadiusMinLimit && */ Vector3.Magnitude(point - nearestTriangle.position) * KMeansFunctions.boundingRadiusScaleFactor > realTimeAdding_RadiusMinLimit)
+        {
+            // Initialise to be a big number.
+
+            // Nearest triangle mid point to the centroid
+            minRadius = Vector3.Magnitude(point - nearestTriangle.position) * KMeansFunctions.boundingRadiusScaleFactor;
+
+            // indexOfClosestTriangle would now be set as the index of the triangle closest to the centroid.
+            // This for-loop is to check if any of the vertices of the triangle is closer than the triangle center.
+            // If so, then set the minRadius to distance between centroid and closest vertex of the triangle.
+            for (int j = 0; j < 3; j++)
+            {
+                currentSize = Vector3.Magnitude(point - verticesOfTriangles[triangles[nearestTriangle.triangleIndex * 3 + j]]) * (KMeansFunctions.boundingRadiusScaleFactor);
+                if (currentSize < minRadius)
+                {
+                    minRadius = currentSize;
+                }
+            }
+
+
+
+
+            // Insert(new CentroidNode() { position = point, radius = Vector3.Magnitude(point - nearestTriangle.position) * (KMeansFunctions.boundingRadiusScaleFactor) });
+            Insert(new CentroidNode() { position = point, radius = minRadius});
+
+
+
+            /////////////////////////////////////////////////////////
+            /*
+            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+
+            // Primitive Sphere Mesh has 0.5 radius for unit sphere. So must scale by 2x of radius from centroid. Reference to sphere details: https://docs.unity3d.com/510/Documentation/Manual/PrimitiveObjects.html
+            sphere.transform.localScale = Vector3.one * Vector3.Magnitude(point - nearestTriangle.position) * (KMeansFunctions.boundingRadiusScaleFactor) * 2;
+            sphere.transform.position = point;
+            */
+            /////////////////////////////////////////////////////////
+        }
+
+
     }
 }
 
