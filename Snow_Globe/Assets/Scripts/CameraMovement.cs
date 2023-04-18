@@ -3,39 +3,13 @@ using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
-
-    float speed, rotationSpeed;
-    bool toRotate, toFly;
-
-
-    ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
-    SnowGlobe snowGlobe;
-    ObjectMovement objectMovementScript;
-    Matrix4x4 combinedInverseMatrix;
-
-
-    CollisionChecker collisionChecker = new();
-    KDTree meshCollisionKDTree;
-    ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
-
-
-
-
+    float speed;
 
     // Start is called before the first frame update
     void Start()
     {
+        transform.position = new Vector3(0, 0, -5);
         speed = 10f;
-        rotationSpeed = 50;
-        toRotate = false;
-        toFly = false;
-
-
-        ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
-        snowGlobe = GameObject.Find("SnowGlobe").GetComponent<SnowGlobe>();
-        ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
-
-
     }
 
     // Update is called once per frame
@@ -43,89 +17,27 @@ public class CameraMovement : MonoBehaviour
     {
         if(Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
-            if (toFly)
-            {
-                transform.Translate(Vector3.up * Time.deltaTime * speed * 1);               // Ascend upwards.
-            }
-            else
-            {
+            if(Vector3.Magnitude(transform.position - Vector3.zero) > 0.5f){
                 transform.Translate(Vector3.forward * Time.deltaTime * speed * 1);
             }
-            
         }
 
         else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
         {
-            if (toFly)
-            {
-                transform.Translate(Vector3.down * Time.deltaTime * speed * 1);              // Descend downwards.
-            }
-            else
-            {
-                transform.Translate(Vector3.back * Time.deltaTime * speed * 1);
-            }
-        }
-
-        else if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
-        {
-            if (toRotate)
-            {
-                transform.Rotate(Vector3.up * Time.deltaTime * rotationSpeed * 1);          // When using Rotate(), Vector3.up is for the axis.
-            }
-            else
-            {
-                transform.Translate(Vector3.right * Time.deltaTime * speed * 1);   
-            }
-            
-        }
-
-        else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
-        {
-            if (toRotate)
-            {
-                transform.Rotate(Vector3.up * Time.deltaTime * rotationSpeed * -1);         // When using Rotate(), Vector3.up is for the axis.
-            }
-            else
-            {
-                transform.Translate(Vector3.left * Time.deltaTime * speed * 1);    
-            }
-        }
-
-        if (Input.GetKeyDown(KeyCode.R)){
-            toRotate = !toRotate;                                                           // Set the opposite bool of the current bool value.
-        }
-
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            toFly = !toFly;                                                                 // Set the opposite bool of the current bool value.
-        }
-
-
-
-
-
-        ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
-        
-        if (snowGlobe.meshCollisionKDTree != null)
-        {
-            meshCollisionKDTree = snowGlobe.meshCollisionKDTree;
-        }
-
-        if (snowGlobe.objectMovementScript.combinedInverseTransformMatrix != null)
-        {
-            combinedInverseMatrix = snowGlobe.objectMovementScript.combinedInverseTransformMatrix;
-        }
-
-        if (collisionChecker.CheckWallCollision(combinedInverseMatrix * new Vector4(transform.position.x, transform.position.y, transform.position.z, 1), meshCollisionKDTree))
-        {
-            Debug.Log("COLLIDED!");
-        }
-        else
-        {
-            Debug.Log("No collision");
+            transform.Translate(Vector3.back * Time.deltaTime * speed * 1);
         }
 
         
-        ///////////////////////////////////////////// TO REMOVE AFTER USING FOR PARTICLES / TESTING OF CLASSES /////////////////////////////////////////////
+        else if (Input.GetKey(KeyCode.Alpha2))
+        {
+            transform.Translate(Vector3.up * Time.deltaTime * speed * 0.5f);               // Ascend upwards.
+        }
+
+
+        else if (Input.GetKey(KeyCode.X))
+        {
+            transform.Translate(Vector3.down * Time.deltaTime * speed * 0.5f);              // Descend downwards.
+        }
+        
     }
 }
