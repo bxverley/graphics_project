@@ -5,10 +5,6 @@ using System;
 
 public class ObjectMovement : MonoBehaviour
 {
-    /*
-    private Vector3 _PrevPos;
-    private Vector3 _PosDelta;
-    */
 
     private Vector3 translationMousePrevPos, translationMouseCurrentPos, translationMousePosChangeVector;
     private Vector3 rotationMousePrevPos, rotationMouseCurrentPos, rotationMousePosChangeVector;
@@ -41,11 +37,6 @@ public class ObjectMovement : MonoBehaviour
 
     void Start ()
     {
-        /*
-        Vector3 _PrevPos = Vector3.zero;
-        Vector3 _PosDelta = Vector3.zero;
-        */
-
 
         mainCamera = Camera.main;
 
@@ -87,24 +78,6 @@ public class ObjectMovement : MonoBehaviour
 
     void Update()
     {
-        /*
-        if(Input.GetMouseButton(0))
-        {
-            _PosDelta = Input.mousePosition - _PrevPos;
-            if(Vector3.Dot(transform.up, Vector3.up) >= 0)
-            {
-                transform.Rotate(transform.up, Vector3.Dot(_PosDelta, Camera.main.transform.right), Space.World);
-            }
-            else
-            {
-                transform.Rotate(transform.up, Vector3.Dot(_PosDelta,Camera.main.transform.right), Space.World);
-            }
-            transform.Rotate(Camera.main.transform.right, Vector3.Dot(_PosDelta, Camera.main.transform.up), Space.World);
-        }
-        _PrevPos = Input.mousePosition;
-        */
-
-
 
         cameraZDistFromGlobe = mainCamera.WorldToScreenPoint(transform.position).z;                 // Used in the z coordinate for the 3D mouse position on screen.
 
@@ -195,15 +168,6 @@ public class ObjectMovement : MonoBehaviour
                 DotProdToInverseCombinedMatrix(Matrix4x4.Inverse(rotationMatrix_MeshLocalSpace));
 
                 SetMatricesWithoutTranslation();
-
-
-                /*
-                // Get the inverse for the rotation matrix of Euler Angles.
-                rotationAnglesCombined = Quaternion.Euler(- rotationMousePosChangeVector.y, rotationMousePosChangeVector.x, - rotationMousePosChangeVector.z);
-                rotationMatrix_AroundOrigin = Matrix4x4.Rotate(rotationAnglesCombined);
-                SetRotationMatrix_MeshLocalSpace(ref rotationMatrix_MeshLocalSpace, rotationMatrix_AroundOrigin, translateToOriginMatrix, translateToPositionMatrix);
-                DotProdToInverseCombinedMatrix(rotationMatrix_MeshLocalSpace);
-                */
 
 
                 if (globeParticleSystem == null)
@@ -298,7 +262,6 @@ public class ObjectMovement : MonoBehaviour
         translateToPositionMatrix[0, 3] = combinedTransformMatrix[0, 3];
         translateToPositionMatrix[1, 3] = combinedTransformMatrix[1, 3];
         translateToPositionMatrix[2, 3] = combinedTransformMatrix[2, 3];
-        // translateToPositionMatrix.SetColumn(3, combinedTransformMatrix.GetColumn(3));
 
         rotationMatrix_MeshLocalSpace = translateToPositionMatrix * rotationMatrix_AroundOrigin * translateToOriginMatrix;
     }

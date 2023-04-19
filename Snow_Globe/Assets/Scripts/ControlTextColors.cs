@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,8 +38,6 @@ public class ControlTextColors : MonoBehaviour
 
         C = transform.Find("C").GetComponent<TextMeshProUGUI>();
         Shift_C = transform.Find("Shift_C").GetComponent<TextMeshProUGUI>();
-
-        Debug.Log(transform.Find("LeftClick"));
 
         fullOpacity = Color.white;
         lessOpacity = Color.white;

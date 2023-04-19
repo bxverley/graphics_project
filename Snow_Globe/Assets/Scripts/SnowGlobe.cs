@@ -8,13 +8,10 @@ using UnityEngine.SceneManagement;
 public class SnowGlobe : MonoBehaviour
 {
     // Output to Unity Logs Reference: https://docs.unity3d.com/ScriptReference/Debug.Log.html
-    // Debug.Log("Message");
 
     // Reference for Mesh Generation: https://www.youtube.com/watch?v=eJEpeUH1EMg
 
     private string objectName;
-    // private string[] objectsNames;
-    // private int objectNameIndex;
 
     private Mesh snowGlobe;
     public List<Vector3> vertices;
@@ -51,8 +48,6 @@ public class SnowGlobe : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // objectsNames = new string[] { "sphere", "garg", "mickey"};
-        // objectNameIndex = 0;
 
         objectName = ChangeObject.GetGlobeObjName();
 
@@ -85,15 +80,13 @@ public class SnowGlobe : MonoBehaviour
         // ------------------ PLATFORM ------------------ //
 
         platform = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        
-        // platform.transform.localScale = new Vector3(max_xyz[0], heightOfPlatform, max_xyz[2]);
-        // platform.transform.position = new Vector3(0, min_xyz[1] - (transform.localScale.y), 0);              // Shift to lowest y value among the vertices, and shift down more by half the height, so the top of the cylinder is at the min y value of the globe.
+                   
         platformMesh = platform.GetComponent<MeshFilter>().mesh;
 
         Vector3[] platformOriginalVertices = platformMesh.vertices;
         Vector3[] platformTransformedVertices = new Vector3[platformOriginalVertices.Length];
         Matrix4x4 scalePlatformMatrix = Matrix4x4.Scale(new Vector3(max_xyz[0] - min_xyz[0], heightOfPlatform, max_xyz[2] - min_xyz[2]));
-        Matrix4x4 moveDownPlatformMatrix = Matrix4x4.Translate(new Vector3(0, min_xyz[1] - heightOfPlatform, 0));
+        Matrix4x4 moveDownPlatformMatrix = Matrix4x4.Translate(new Vector3(0, min_xyz[1] - heightOfPlatform, 0));                                    // Shift to lowest y value among the vertices, and shift down more by half the height, so the top of the cylinder is at the min y value of the globe.
         Matrix4x4 combinedMatrix = moveDownPlatformMatrix * scalePlatformMatrix;
 
         for (int i = 0; i < platformOriginalVertices.Length; i++)
@@ -124,9 +117,9 @@ public class SnowGlobe : MonoBehaviour
 
         triangleCenterVerticesTree = kMeansFunctions.ReturnTriangleCenterVerticesTree();
 
-        ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
-        //kMeansFunctions.ShowSpheres(); //bounding volume
-        ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
+        // ---------------------------- FOR SHOWING BOUNDING SPHERES ---------------------------- //
+        // kMeansFunctions.ShowSpheres(); //bounding volume
+        // ---------------------------- FOR SHOWING BOUNDING SPHERES ---------------------------- //
 
         meshCollisionKDTree = kMeansFunctions.ConvertToLowMemoryKDTree();
         meshCollisionKDTree.SetVerticesOfTrianglesAndTriangles(vertices, triangles);
@@ -159,41 +152,6 @@ public class SnowGlobe : MonoBehaviour
     {
         if(Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.C))
         {
-            /*
-            snowGlobe.Clear();
-
-            // Need to use objectsNames.Length - 1, or else objectNameIndex++ would go out of range.
-            if (objectNameIndex < objectsNames.Length - 1)
-            {
-                objectNameIndex++; 
-            }
-            else
-            {
-                objectNameIndex = 0;
-            }
-
-            ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
-            // kMeansFunctions.DestroySpheres();
-            ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
-
-            // Reference to destroy component from object:https://answers.unity.com/questions/378930/how-delete-or-remove-a-component-of-an-gameobject.html
-            Destroy(kMeansFunctions);
-
-            GenerateGlobeProperties();
-
-            kMeansFunctions = gameObject.AddComponent<KMeansFunctions>();
-            kMeansFunctions.Start();
-            kMeansFunctions.BeginKMeansOperations(3);
-
-            ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
-            // kMeansFunctions.ShowSpheres();
-            ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
-
-            meshCollisionKDTree = kMeansFunctions.ConvertToLowMemoryKDTree();
-
-            UpdateGlobeProperties();
-            */
-
             // Reset Scene
             ChangeObject.ChangePrevGlobeObject();
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -209,8 +167,6 @@ public class SnowGlobe : MonoBehaviour
 
     void GenerateGlobeProperties()
     {
-        // objectName = objectsNames[objectNameIndex];
-
         vertices = new List<Vector3>();
         vertexNormals = new List<Vector3>();
         triangles = new List<int>();
