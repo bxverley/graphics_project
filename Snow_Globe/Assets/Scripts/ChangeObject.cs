@@ -5,7 +5,7 @@ using UnityEngine;
 
 public static class ChangeObject { 
     
-    static string[] objectsNames = new string[] {"original", "tree", "lamp", "tower", "sphere"};  // "garg", "mickey"
+    static string[] objectsNames = new string[] {"original", "tree", "lamp", "tower", "sphere"}; 
     static int objectNameIndex = 0;
 
     

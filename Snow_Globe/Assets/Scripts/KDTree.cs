@@ -164,9 +164,7 @@ public class KDTree
         nearestTriangle = (TriangleNode)triangleCenterVerticesTree.StartSearch(point);
         currentNearest = StartSearch(point);
 
-        // Debug.Log($"Vector3.Magnitude(point - nearestTriangle.position) * KMeansFunctions.boundingRadiusScaleFactor: {Vector3.Magnitude(point - nearestTriangle.position) * KMeansFunctions.boundingRadiusScaleFactor}, and realTimeAdding_RadiusMinLimit: {realTimeAdding_RadiusMinLimit}");
-        
-        if( /*Vector3.Magnitude(point - currentNearest.position) < realTimeAdding_RadiusMinLimit && */ Vector3.Magnitude(point - nearestTriangle.position) * KMeansFunctions.boundingRadiusScaleFactor > realTimeAdding_RadiusMinLimit)
+        if(Vector3.Magnitude(point - nearestTriangle.position) * KMeansFunctions.boundingRadiusScaleFactor > realTimeAdding_RadiusMinLimit)
         {
             // Initialise to be a big number.
 
@@ -186,22 +184,8 @@ public class KDTree
             }
 
 
-
-
-            // Insert(new CentroidNode() { position = point, radius = Vector3.Magnitude(point - nearestTriangle.position) * (KMeansFunctions.boundingRadiusScaleFactor) });
             Insert(new CentroidNode() { position = point, radius = minRadius});
 
-
-
-            /////////////////////////////////////////////////////////
-            /*
-            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-
-            // Primitive Sphere Mesh has 0.5 radius for unit sphere. So must scale by 2x of radius from centroid. Reference to sphere details: https://docs.unity3d.com/510/Documentation/Manual/PrimitiveObjects.html
-            sphere.transform.localScale = Vector3.one * Vector3.Magnitude(point - nearestTriangle.position) * (KMeansFunctions.boundingRadiusScaleFactor) * 2;
-            sphere.transform.position = point;
-            */
-            /////////////////////////////////////////////////////////
         }
 
 

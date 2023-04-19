@@ -1,4 +1,3 @@
-///*
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -37,5 +36,3 @@ public class CameraSkyBoxSettings : MonoBehaviour
         probeComponent.transform.position = GameObject.Find("SnowGlobe").transform.position;
     }
 }
-
-//*/

@@ -23,26 +23,4 @@ public class CollisionChecker
         }
 
     }
-
-    public bool CheckMiniatureCollision(Vector3 point, KDTree kdTree)
-    {
-        nearestNode = kdTree.StartSearch(point);
-
-        // Keep this order of the vectices in the subtraction
-        currentVector3 = point - nearestNode.position;
-
-        for (int i = 0; i < 3; i++)
-        {
-            if (currentVector3[i] < nearestNode.radius * 0.01f)
-            {
-                // If we use bounding cubes to cover the miniatures, this would mean that the point is inside the bounding cube, thus collision with the miniature has taken place.
-                // Point is outside of the miniature and should not enter the bounding cube.
-                return true;
-            }
-        }
-
-        // No collision if point is outside of bounding cubes.
-        return false;
-
-    }
 }

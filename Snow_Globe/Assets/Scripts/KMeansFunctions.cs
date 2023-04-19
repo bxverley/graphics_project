@@ -354,9 +354,8 @@ public class KMeansFunctions : MonoBehaviour
             && Vector3.Magnitude(currentVector3) < nearestNode.radius + maximumAcceptableDist)
         {
             // - Entering this if-block means that the vector from the vertex to the centroid does not go out of the mesh,
-            //    since that vector is in the opposite direction as the normal of the vertex.
+            //    since that vector is in the opposite direction as the normal of the triangle.
             // - The vertex is also within maximum acceptable range (must be set) away from the bounding sphere of the centroid if it has radius > 0.
-            // - Else if the centroid bounding sphere has radius = 0, just add the vertexIndex.
 
             // No implication on memory even if casting? Reference: https://stackoverflow.com/questions/40298290/explicit-cast-explanation-in-terms-of-memory-for-reference-type-in-c-sharp
             ((CentroidNodeForCalc)nearestNode).nearestVertexIndices.Add(vertex);
@@ -365,6 +364,7 @@ public class KMeansFunctions : MonoBehaviour
 
         else
         {
+            // Triangle midpoints that are too far from the existing bounding spheres.
             listOfTriNodesTooFar.Add(vertex);
         }
 
@@ -546,7 +546,6 @@ public class KMeansFunctions : MonoBehaviour
     public void EnsureAllBoundsInsideMesh()
     {
         int counter;
-        Vector3 triangleNormalOneAxis;
         for(int i = 0; i < allCentroidNodeForCalc.Count; i++)
         {
             counter = 0; 
@@ -594,32 +593,7 @@ public class KMeansFunctions : MonoBehaviour
                 
                 allCentroidNodeForCalc[i].radius = Vector3.Magnitude(currentVector3);
 
-                /*
-                for (int j = 0; j < 3; j++)
-                {
-                    /*
-                    centroidToPointDist_1D = Math.Abs(allCentroidNodeForCalc[i].position[j] - currentTriangleNode.position[j]);
-                    currentVector3 = (allCentroidNodeForCalc[i].position + currentTriangleNode.triangleNormal * allCentroidNodeForCalc[i].radius) - currentTriangleNode.position;
-                    if (allCentroidNodeForCalc[i].radius > centroidToPointDist_1D && Vector3.Dot(Vector3.Normalize(currentVector3), Vector3.Normalize(currentTriangleNode.triangleNormal)) < 0 )
-                    {
-                        allCentroidNodeForCalc[i].position[j] += currentVector3[j] * (allCentroidNodeForCalc[i].radius - centroidToPointDist_1D);
-                    }
-                    
-
-                    triangleNormalOneAxis = Vector3.zero;
-                    triangleNormalOneAxis[j] = currentTriangleNode.triangleNormal[j];
-
-                    currentVector3 = (allCentroidNodeForCalc[i].position + triangleNormalOneAxis * allCentroidNodeForCalc[i].radius) - currentTriangleNode.position;
-                    if (Vector3.Dot(Vector3.Normalize(currentVector3), Vector3.Normalize(currentTriangleNode.triangleNormal)) < 0)
-                    {
-                        allCentroidNodeForCalc[i].radius *= 0.8f;
-                    }
-                }
-                */
             }
-
-
-
 
             // Further shift centroid such that the bounding sphere is not overshooting mesh walls regardless of whether it is out or already within.
             allCentroidNodeForCalc[i].position = scaleDownTotalBoundVolMatrix.MultiplyPoint3x4(allCentroidNodeForCalc[i].position);
@@ -699,8 +673,6 @@ public class KMeansFunctions : MonoBehaviour
 
         outputKDTree.SetRootNode(currentNode);
 
-        Debug.Log($"{oldCentroidNodeForCalc.position}");
-
         ConvertChildren(ref oldCentroidNodeForCalc, ref outputKDTree);
 
         return outputKDTree;
@@ -742,13 +714,11 @@ public class KMeansFunctions : MonoBehaviour
 
 
 
-    ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
+    // ---------------------------- FOR SHOWING BOUNDING SPHERES ---------------------------- //
 
     public void ShowSpheres()
     {
         GameObject sphere;
-
-        // Debug.Log($"allCentroidNodeForCalc.Count is {allCentroidNodeForCalc.Count}");
 
         for (int i = 0; i < allCentroidNodeForCalc.Count; i++)
         {
@@ -769,7 +739,7 @@ public class KMeansFunctions : MonoBehaviour
         }
     }
 
-    ///////////////////////////////////////////// TO REMOVE AFTER TESTING OF CLASSES OR PARTICLES IF NEEDED /////////////////////////////////////////////
+    // ---------------------------- FOR SHOWING BOUNDING SPHERES ---------------------------- //
 
 }
 

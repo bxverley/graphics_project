@@ -169,7 +169,7 @@ public class GlobeParticleSystem : MonoBehaviour
    
 
 
-            globeParticles[i].position = globeParticles[i].position + (globeParticles[i].directionVelocity * speedScaleFactor); ////////////////////////////////////////////////
+            globeParticles[i].position = globeParticles[i].position + (globeParticles[i].directionVelocity * speedScaleFactor); 
 
             if (globeParticles[i].speed > 0)
             {
@@ -232,11 +232,13 @@ public class GlobeParticleSystem : MonoBehaviour
                 globeParticles[i].speed += Vector3.Magnitude(currentRandomVecWhenObjMove) * particleMoveFactor_WhenGlobeMove;
 
 
+                
                 // As long as a force constructed using the opposite of the triangle normal vector value is not opposing the gravity vector, add to the directionVelocity of the particle.
                 AddToDirectionVelocity_NonGravityForces(globeParticles[i],
                     ((Vector3.Magnitude(nearestNode.position - nearestTriangle.position) / Vector3.Magnitude(currentVector3 - nearestTriangle.position)) *
                     0.35f *
                     -1.0f * nearestTriangle.triangleNormal));
+                
 
 
 
@@ -272,8 +274,7 @@ public class GlobeParticleSystem : MonoBehaviour
             {
 
                 // Take the latest position of the particle in local space where it did not pass the boundary, and set as the particle's position in the world space.
-                particle.position = objectMovementScript.combinedTransformMatrix.MultiplyPoint3x4(particle.oldPositionInLocalSpace); // - nearestTriangle.triangleNormal * awayFromBoundaryScaleFactor or speedScaleFactor); // currentParticlePosVec4
-                // AddToDirectionVelocity_NonGravityForces(particle, -1.0f * speedScaleFactor * nearestTriangle.triangleNormal);
+                particle.position = objectMovementScript.combinedTransformMatrix.MultiplyPoint3x4(particle.oldPositionInLocalSpace); 
 
                 particle.speed /= collideDecelerationFactor;
 
