@@ -5,9 +5,10 @@
 
 #### How to run:
 1. Load project into unity
-2. Navigate to Loading_screen_Scene.unity in Assests/Scenes
-3. Click on the file 
-4. Press the play button to run the snow globe simulation
+  1.1 In the Unity Hub application window "Projects" tab, click "Open", and click on "Snow_Globe" folder, then the "Open" button
+2 Once the project is opened in Unity, click on the "Scenes" folder at the bottom and double-click "Loading_screen_Scene" 
+ (If you can't find it, try navigating to Assests/Scenes and look for a file that is named similarly to "Loading_screen_Scene.unity" or "Loading_screen_Scene".)
+3. Press the play button to run the snow globe simulation
 
 #### Instructions for the simulation:
 - To load the snow globe, press the Load SnowGlobe button in the middle of the screen 
