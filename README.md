@@ -22,6 +22,10 @@ Instructions for the simulation:
 - C: Next shape (GlobeShape)
 - Shift+C: Previous shape (GlobeShape)
 
+**NOTE:**
+
+There will be a pause between loading each model when C is pressed to go to the next shape/ Shift+C is pressed to go to the previous object.
+Please wait for a short while as the next model is being generated
 
 To render bounding volumes in the snow globes:
 - In SnowGlobe.cs, uncomment the function: kMeansFunctions.ShowSpheres() at line 128
